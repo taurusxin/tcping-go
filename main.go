@@ -21,6 +21,7 @@ func main() {
 		fast            bool
 
 		successCount int
+		successDelay time.Duration
 		attemptCount int
 		stopped      bool
 	)
@@ -109,6 +110,7 @@ func main() {
 				fmt.Printf("测试到 %s 的连接失败: %s\n", address, "连接超时")
 			} else {
 				successCount++
+				successDelay += duration
 				fmt.Printf("来自 %s 的响应: 时间=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
 				conn.Close()
 			}
@@ -137,7 +139,11 @@ func main() {
 	if !stopped {
 		fmt.Println()
 	}
-	fmt.Printf("测试完成，成功次数: %d/%d\n", successCount, attemptCount)
+	avgDelay := 0.0
+	if successCount > 0 {
+		avgDelay = float64(successDelay) / float64(time.Duration(successCount * int(time.Millisecond)))
+	}
+	fmt.Printf("测试完成，成功次数: %d/%d，平均延迟：%.3fms\n", successCount, attemptCount, avgDelay)
 }
 
 func filterIP(ips []net.IP, ipv6 bool) (string, error) {
