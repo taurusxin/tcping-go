@@ -1,13 +1,14 @@
 package main
 
 import (
-	flag "github.com/spf13/pflag"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		count           int
 		timeoutDuration time.Duration
 		infinite        bool
-		ipv6						bool
+		ipv6            bool
 
 		successCount int
 		attemptCount int
@@ -33,7 +34,7 @@ func main() {
 	flag.DurationVarP(&timeoutDuration, "timeout", "s", 2*time.Second, "超时时间，默认为2秒")
 	flag.BoolVarP(&infinite, "infinite", "t", false, "无限次测试")
 	flag.BoolVarP(&ipv6, "ipv6", "6", false, "使用 IPv6，需搭配域名使用")
-	
+
 	flag.Parse()
 
 	if *showHelp {
@@ -78,7 +79,7 @@ func main() {
 			record = "AAAA"
 		}
 		ip, err = filterIP(ips, ipv6)
-		if (err != nil) {
+		if err != nil {
 			fmt.Printf("找不到 %s 的 %s 记录\n", hostname, record)
 			os.Exit(1)
 		}
@@ -101,11 +102,12 @@ func main() {
 			duration := time.Since(start)
 			attemptCount++
 
+			fmt.Printf("[%d] ", i+1)
 			if err != nil {
 				fmt.Printf("测试到 %s 的连接失败: %s\n", address, "连接超时")
 			} else {
 				successCount++
-				fmt.Printf("[%d] 来自 %s 的响应: 时间=%s\n",i+1, address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
+				fmt.Printf("来自 %s 的响应: 时间=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
 				conn.Close()
 			}
 
