@@ -5,7 +5,7 @@ VERSION=1.0.0
 # The -w and -s flags reduce binary sizes by excluding unnecessary symbols and debug info
 # The -buildid= flag makes builds reproducible
 
-all: linux macos-amd64 macos-arm64 win64 win32
+all: linux darwin-amd64 darwin-arm64 win64 win32
 
 linux:
 	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
