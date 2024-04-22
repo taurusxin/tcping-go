@@ -21,7 +21,7 @@ func main() {
 		fast            bool
 
 		successCount int
-		successDelay time.Duration
+		successDelay []time.Duration
 		attemptCount int
 		stopped      bool
 	)
@@ -110,7 +110,7 @@ func main() {
 				fmt.Printf("测试到 %s 的连接失败: %s\n", address, "连接超时")
 			} else {
 				successCount++
-				successDelay += duration
+				successDelay = append(successDelay, duration)
 				fmt.Printf("来自 %s 的响应: 时间=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
 				conn.Close()
 			}
@@ -139,11 +139,23 @@ func main() {
 	if !stopped {
 		fmt.Println()
 	}
-	avgDelay := 0.0
-	if successCount > 0 {
-		avgDelay = float64(successDelay) / float64(time.Duration(successCount * int(time.Millisecond)))
+
+	// convert duration to milliseconds
+	successDelayMs := make([]float64, len(successDelay))
+	for i, delay := range successDelay {
+		successDelayMs[i] = float64(delay) / float64(time.Millisecond)
 	}
-	fmt.Printf("测试完成，成功次数: %d/%d，平均延迟：%.3fms\n", successCount, attemptCount, avgDelay)
+
+	minDelay := 0.0
+	maxDelay := 0.0
+	avgDelay := 0.0
+
+	if successCount > 0 {
+		minDelay = float64_min(successDelayMs)
+		maxDelay = float64_max(successDelayMs)
+		avgDelay = float64_avg(successDelayMs)
+	}
+	fmt.Printf("测试完成，成功次数: %d/%d，最小=%.3fms，最大=%.3fms，平均=%.3fms\n", successCount, attemptCount, minDelay, maxDelay, avgDelay)
 }
 
 func filterIP(ips []net.IP, ipv6 bool) (string, error) {
@@ -161,4 +173,32 @@ func filterIP(ips []net.IP, ipv6 bool) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("找不到合适的IP地址")
+}
+
+func float64_min(array []float64) float64 {
+	min := array[0]
+	for _, value := range array {
+		if value < min {
+			min = value
+		}
+	}
+	return min
+}
+
+func float64_max(array []float64) float64 {
+	max := array[0]
+	for _, value := range array {
+		if value > max {
+			max = value
+		}
+	}
+	return max
+}
+
+func float64_avg(array []float64) float64 {
+	sum := 0.0
+	for _, value := range array {
+		sum += value
+	}
+	return sum / float64(len(array))
 }
