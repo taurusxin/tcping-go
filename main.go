@@ -18,6 +18,7 @@ func main() {
 		timeoutDuration time.Duration
 		infinite        bool
 		ipv6            bool
+		fast            bool
 
 		successCount int
 		attemptCount int
@@ -34,6 +35,7 @@ func main() {
 	flag.DurationVarP(&timeoutDuration, "timeout", "s", 2*time.Second, "超时时间，默认为2秒")
 	flag.BoolVarP(&infinite, "infinite", "t", false, "无限次测试")
 	flag.BoolVarP(&ipv6, "ipv6", "6", false, "使用 IPv6，需搭配域名使用")
+	flag.BoolVarP(&fast, "fast", "f", false, "快速模式，降低每次成功测试之间的间隔")
 
 	flag.Parse()
 
@@ -114,7 +116,11 @@ func main() {
 			if !infinite && attemptCount >= count {
 				break
 			}
-			time.Sleep(1 * time.Second)
+			if fast {
+				time.Sleep(150 * time.Millisecond)
+			} else {
+				time.Sleep(1 * time.Second)
+			}
 		}
 		done <- true
 	}()
