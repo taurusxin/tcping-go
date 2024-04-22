@@ -29,7 +29,7 @@ releases: linux darwin-amd64 darwin-arm64 win64 win32
 	tar zcf $(BINDIR)/$(NAME)-darwin-arm64-$(VERSION).tar.gz -C $(BINDIR) $(NAME)-darwin-arm64
 	zip -j $(BINDIR)/$(NAME)-win32-$(VERSION).zip $(BINDIR)/$(NAME)-win32.exe
 	zip -j $(BINDIR)/$(NAME)-win64-$(VERSION).zip $(BINDIR)/$(NAME)-win64.exe
-	rm -f $(BINDIR)/socks5-darwin-amd64 $(BINDIR)/socks5-darwin-arm64 $(BINDIR)/socks5-linux $(BINDIR)/socks5-win32.exe $(BINDIR)/socks5-win64.exe
+	rm -f $(BINDIR)/$(NAME)-darwin-amd64 $(BINDIR)/$(NAME)-darwin-arm64 $(BINDIR)/$(NAME)-linux $(BINDIR)/$(NAME)-win32.exe $(BINDIR)/$(NAME)-win64.exe
 
 clean:
 	rm $(BINDIR)/*
