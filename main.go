@@ -23,8 +23,11 @@ func main() {
 		stopped      bool
 	)
 
+	version := "1.0.0"
+
 	// 设置命令行参数
-	help := flag.BoolP("help", "h", false, "显示帮助信息")
+	showHelp := flag.BoolP("help", "h", false, "显示帮助信息")
+	showVersion := flag.BoolP("version", "v", false, "显示版本信息")
 	flag.IntVarP(&port, "port", "p", 80, "端口，默认为80")
 	flag.IntVarP(&count, "count", "c", 4, "测试次数，默认为4次")
 	flag.DurationVarP(&timeoutDuration, "timeout", "s", 2*time.Second, "超时时间，默认为2秒")
@@ -33,8 +36,13 @@ func main() {
 	
 	flag.Parse()
 
-	if *help {
+	if *showHelp {
 		flag.Usage()
+		os.Exit(0)
+	}
+
+	if *showVersion {
+		fmt.Printf("tcping v%s\n", version)
 		os.Exit(0)
 	}
 
