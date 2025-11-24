@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -28,15 +29,13 @@ func main() {
 
 	version := "1.0.0"
 
-	// 设置命令行参数
-	showHelp := flag.BoolP("help", "h", false, "显示帮助信息")
-	showVersion := flag.BoolP("version", "v", false, "显示版本信息")
-	flag.IntVarP(&port, "port", "p", 80, "端口，默认为80")
-	flag.IntVarP(&count, "count", "c", 4, "测试次数，默认为4次")
-	flag.DurationVarP(&timeoutDuration, "timeout", "s", 2*time.Second, "超时时间，默认为2秒")
-	flag.BoolVarP(&infinite, "infinite", "t", false, "无限次测试")
-	flag.BoolVarP(&ipv6, "ipv6", "6", false, "使用 IPv6，需搭配域名使用")
-	flag.BoolVarP(&fast, "fast", "f", false, "快速模式，降低每次成功测试之间的间隔")
+	showHelp := flag.BoolP("help", "h", false, "Show help")
+	showVersion := flag.BoolP("version", "v", false, "Show version")
+	flag.IntVarP(&count, "count", "c", 4, "Number of probes, default 4")
+	flag.DurationVarP(&timeoutDuration, "timeout", "s", 2*time.Second, "Timeout, default 2s")
+	flag.BoolVarP(&infinite, "infinite", "t", false, "Infinite probes")
+	flag.BoolVarP(&ipv6, "ipv6", "6", false, "Use IPv6; requires domain name")
+	flag.BoolVarP(&fast, "fast", "f", false, "Fast mode; reduce delay between successful probes")
 
 	flag.Parse()
 
@@ -56,12 +55,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	hostname := args[0]
+	port = 80
+	if len(args) >= 2 {
+		p, err := strconv.Atoi(args[1])
+		if err != nil {
+			fmt.Println("Port must be an integer")
+			os.Exit(1)
+		}
+		port = p
+	}
 	if port < 1 || port > 65535 {
-		fmt.Println("端口号必须在1-65535之间")
+		fmt.Println("Port must be between 1 and 65535")
 		os.Exit(1)
 	}
-
-	hostname := args[0]
 
 	// 设置信号捕获
 	stopped = false
@@ -74,7 +81,7 @@ func main() {
 		// 解析域名
 		ips, err := net.LookupIP(hostname)
 		if err != nil {
-			fmt.Printf("解析 %s 失败: %s\n", hostname, err)
+			fmt.Printf("Failed to resolve %s: %s\n", hostname, err)
 			os.Exit(1)
 		}
 		record := "A"
@@ -83,10 +90,10 @@ func main() {
 		}
 		ip, err = filterIP(ips, ipv6)
 		if err != nil {
-			fmt.Printf("找不到 %s 的 %s 记录\n", hostname, record)
+			fmt.Printf("No %s record found for %s\n", record, hostname)
 			os.Exit(1)
 		}
-		fmt.Printf("使用 %s 的 %s 记录: %s\n", hostname, record, ip)
+		fmt.Printf("Using %s %s record: %s\n", hostname, record, ip)
 	} else {
 		ip = hostname
 	}
@@ -107,11 +114,11 @@ func main() {
 
 			fmt.Printf("[%d] ", i+1)
 			if err != nil {
-				fmt.Printf("测试到 %s 的连接失败: %s\n", address, "连接超时")
+				fmt.Printf("Connection to %s failed: %s\n", address, "timeout")
 			} else {
 				successCount++
 				successDelay = append(successDelay, duration)
-				fmt.Printf("来自 %s 的响应: 时间=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
+				fmt.Printf("Reply from %s: time=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
 				conn.Close()
 			}
 
@@ -127,20 +134,17 @@ func main() {
 		done <- true
 	}()
 
-	// 等待信号或测试完成
 	select {
 	case <-sigChan:
-		fmt.Println("\n测试被用户中断")
+		fmt.Println("\nTest interrupted by user")
 		stopped = true
 	case <-done:
 	}
 
-	// 打印统计结果
 	if !stopped {
 		fmt.Println()
 	}
 
-	// convert duration to milliseconds
 	successDelayMs := make([]float64, len(successDelay))
 	for i, delay := range successDelay {
 		successDelayMs[i] = float64(delay) / float64(time.Millisecond)
@@ -149,13 +153,17 @@ func main() {
 	minDelay := 0.0
 	maxDelay := 0.0
 	avgDelay := 0.0
+	successRate := 0.0
 
 	if successCount > 0 {
 		minDelay = float64_min(successDelayMs)
 		maxDelay = float64_max(successDelayMs)
 		avgDelay = float64_avg(successDelayMs)
 	}
-	fmt.Printf("测试完成，成功次数: %d/%d，最小=%.3fms，最大=%.3fms，平均=%.3fms\n", successCount, attemptCount, minDelay, maxDelay, avgDelay)
+	if attemptCount > 0 {
+		successRate = float64(successCount) / float64(attemptCount) * 100
+	}
+	fmt.Printf("Test finished, success %d/%d (%.2f%%)\nmin = %.3fms, max = %.3fms, avg = %.3fms\n", successCount, attemptCount, successRate, minDelay, maxDelay, avgDelay)
 }
 
 func filterIP(ips []net.IP, ipv6 bool) (string, error) {
@@ -172,7 +180,7 @@ func filterIP(ips []net.IP, ipv6 bool) (string, error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("找不到合适的IP地址")
+	return "", fmt.Errorf("no suitable IP address found")
 }
 
 func float64_min(array []float64) float64 {
