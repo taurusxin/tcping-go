@@ -27,7 +27,7 @@ func main() {
 		stopped      bool
 	)
 
-	version := "1.0.0"
+	version := "1.2.0"
 
 	showHelp := flag.BoolP("help", "h", false, "Show help")
 	showVersion := flag.BoolP("version", "v", false, "Show version")
