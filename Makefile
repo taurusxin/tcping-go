@@ -19,21 +19,21 @@ darwin-amd64:
 darwin-arm64:
 	GOARCH=arm64 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
 
-win64:
+windows-amd64:
 	GOARCH=amd64 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe
 
-win32:
+windows-386:
 	GOARCH=386 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe
 
-releases: linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 win64 win32
+releases: linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64 windows-386
 	chmod +x $(BINDIR)/$(NAME)-*
 	tar zcf $(BINDIR)/$(NAME)-linux-amd64-$(VERSION).tar.gz -C $(BINDIR) $(NAME)-linux-amd64
 	tar zcf $(BINDIR)/$(NAME)-linux-arm64-$(VERSION).tar.gz -C $(BINDIR) $(NAME)-linux-arm64
 	tar zcf $(BINDIR)/$(NAME)-darwin-amd64-$(VERSION).tar.gz -C $(BINDIR) $(NAME)-darwin-amd64
 	tar zcf $(BINDIR)/$(NAME)-darwin-arm64-$(VERSION).tar.gz -C $(BINDIR) $(NAME)-darwin-arm64
-	zip -j $(BINDIR)/$(NAME)-win32-$(VERSION).zip $(BINDIR)/$(NAME)-win32.exe
-	zip -j $(BINDIR)/$(NAME)-win64-$(VERSION).zip $(BINDIR)/$(NAME)-win64.exe
-	rm -f $(BINDIR)/$(NAME)-darwin-amd64 $(BINDIR)/$(NAME)-darwin-arm64 $(BINDIR)/$(NAME)-linux-amd64 $(BINDIR)/$(NAME)-linux-arm64 $(BINDIR)/$(NAME)-win32.exe $(BINDIR)/$(NAME)-win64.exe
+	zip -j $(BINDIR)/$(NAME)-windows-386-$(VERSION).zip $(BINDIR)/$(NAME)-windows-386.exe
+	zip -j $(BINDIR)/$(NAME)-windows-amd64-$(VERSION).zip $(BINDIR)/$(NAME)-windows-amd64.exe
+	rm -f $(BINDIR)/$(NAME)-darwin-amd64 $(BINDIR)/$(NAME)-darwin-arm64 $(BINDIR)/$(NAME)-linux-amd64 $(BINDIR)/$(NAME)-linux-arm64 $(BINDIR)/$(NAME)-windows-386.exe $(BINDIR)/$(NAME)-windows-amd64.exe
 
 clean:
 	rm $(BINDIR)/*-$(VERSION).tar.gz $(BINDIR)/*-$(VERSION).zip
