@@ -107,19 +107,28 @@ func Run() {
 
 	done := make(chan bool, 1)
 	go func() {
+		probe := 0
 		for i := 0; infinite || i < count; i++ {
 			start := time.Now()
 			conn, err := net.DialTimeout("tcp", address, timeoutDuration)
 			duration := time.Since(start)
-			attemptCount++
 
-			fmt.Printf("[%d] ", i+1)
 			if err != nil {
-				fmt.Printf("Connection to %s failed: %s\n", address, "timeout")
+				attemptCount++
+				probe++
+				fmt.Printf("[%d] Connection to %s failed: %s\n", probe, address, "timeout")
+			} else if duration < 500*time.Microsecond {
+				conn.Close()
+				if !infinite {
+					count++
+				}
+				continue
 			} else {
+				attemptCount++
+				probe++
 				successCount++
 				successDelay = append(successDelay, duration)
-				fmt.Printf("Reply from %s: time=%s\n", address, fmt.Sprintf("%.3fms", float64(duration)/float64(time.Millisecond)))
+				fmt.Printf("[%d] Reply from %s: time=%.3fms\n", probe, address, float64(duration)/float64(time.Millisecond))
 				conn.Close()
 			}
 
