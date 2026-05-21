@@ -1,4 +1,4 @@
-module tcping
+module github.com/taurusxin/tcping-go
 
 go 1.22.1
 
